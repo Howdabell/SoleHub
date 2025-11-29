@@ -29,7 +29,7 @@ Ikuti langkah-langkah berikut untuk menjalankan proyek ini di komputer lokal And
 
 1.  **Clone Repositori**
     ```bash
-    git clone [https://github.com/username-anda/SoleHub.git](https://github.com/username-anda/SoleHub.git)
+    git clone https://github.com/username-anda/SoleHub.git
     cd SoleHub
     ```
 
