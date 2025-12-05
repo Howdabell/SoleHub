@@ -1,246 +1,228 @@
-import { Text, View } from '@/components/Themed';
+import GlassView from '@/components/GlassView';
+import NewsCard from '@/components/NewsCard';
+import ReleaseCard from '@/components/ReleaseCard';
+import { useTheme } from '@/context/ThemeContext';
 import { supabase } from '@/lib/supabase';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { LayoutGrid, List as ListIcon } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  Image,
-  LayoutAnimation,
-  Platform,
-  RefreshControl,
-  StyleSheet,
-  TouchableOpacity,
-  UIManager
-} from 'react-native';
+import { ActivityIndicator, FlatList, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-// Enable LayoutAnimation on Android
-if (Platform.OS === 'android') {
-  if (UIManager.setLayoutAnimationEnabledExperimental) {
-    UIManager.setLayoutAnimationEnabledExperimental(true);
-  }
-}
-
-type Shoe = {
-  id: string;
-  name: string;
-  brand: string;
-  image_url: string;
+type Release = {
+    id: string;
+    name: string;
+    brand: string;
+    release_date: string;
+    price: number;
+    image_url: string;
 };
 
-export default function TabOneScreen() {
-  const [shoes, setShoes] = useState<Shoe[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [numColumns, setNumColumns] = useState(1);
-  const router = useRouter();
+type News = {
+    id: string;
+    title: string;
+    summary: string;
+    image_url: string;
+    published_at: string;
+};
 
-  const fetchShoes = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('shoes')
-      .select('*')
-      .order('created_at', { ascending: false });
+export default function HomeScreen() {
+    const { theme, colors } = useTheme();
+    const [releases, setReleases] = useState<Release[]>([]);
+    const [news, setNews] = useState<News[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    const router = useRouter();
 
-    if (error) {
-      console.error(error);
-    } else {
-      setShoes(data || []);
-    }
-    setLoading(false);
-  };
+    useEffect(() => {
+        fetchData();
+    }, []);
 
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await fetchShoes();
-    setRefreshing(false);
-  };
+    const fetchData = async () => {
+        setLoading(true);
+        const { data: releasesData } = await supabase
+            .from('releases')
+            .select('*')
+            .gte('release_date', new Date().toISOString())
+            .order('release_date', { ascending: true })
+            .limit(5);
 
-  useEffect(() => {
-    fetchShoes();
-  }, []);
+        const { data: newsData } = await supabase
+            .from('news')
+            .select('*')
+            .order('published_at', { ascending: false })
+            .limit(5);
 
-  const toggleLayout = () => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setNumColumns(prev => prev === 1 ? 3 : 1);
-  };
+        if (releasesData) setReleases(releasesData);
+        if (newsData) setNews(newsData);
+        setLoading(false);
+    };
 
-  const renderItem = ({ item }: { item: Shoe }) => {
-    if (numColumns === 3) {
-      return (
-        <TouchableOpacity
-          style={styles.cardGrid}
-          onPress={() => router.push(`/shoe/${item.id}`)}
-        >
-          <Image source={{ uri: item.image_url }} style={styles.imageGrid} />
-          <View style={styles.cardContentGrid}>
-            <Text style={styles.brandGrid} numberOfLines={1}>{item.brand}</Text>
-            <Text style={styles.nameGrid} numberOfLines={1}>{item.name}</Text>
-          </View>
-        </TouchableOpacity>
-      );
+    const onRefresh = async () => {
+        setRefreshing(true);
+        await fetchData();
+        setRefreshing(false);
+    };
+
+    if (loading && !refreshing) {
+        return (
+            <View style={[styles.container, styles.center, { backgroundColor: colors.background }]}>
+                <ActivityIndicator size="large" color="#FF5722" />
+            </View>
+        );
     }
 
     return (
-      <TouchableOpacity
-        style={styles.card}
-        onPress={() => router.push(`/shoe/${item.id}`)}
-      >
-        <Image source={{ uri: item.image_url }} style={styles.image} />
-        <View style={styles.cardContent}>
-          <Text style={styles.brand}>{item.brand}</Text>
-          <Text style={styles.name}>{item.name}</Text>
-        </View>
-      </TouchableOpacity>
-    );
-  };
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
+            <LinearGradient
+                colors={theme === 'dark' ? ['#000000', '#121212', '#1E1E1E'] : ['#FFFFFF', '#F5F5F5', '#E0E0E0']}
+                style={StyleSheet.absoluteFill}
+            />
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Image source={require('../../assets/images/solehub-logo.png')} style={styles.headerLogo} />
-          <Text style={styles.headerTitle}>SoleHub</Text>
+            {/* Decorative Orbs */}
+            <View style={styles.orb1} />
+            <View style={styles.orb2} />
+
+            <SafeAreaView style={{ flex: 1 }}>
+                <View style={styles.header}>
+                    <View>
+                        <Text style={[styles.greeting, { color: colors.text }]}>Welcome back,</Text>
+                        <Text style={[styles.title, { color: colors.text }]}>SoleHub</Text>
+                    </View>
+                    <TouchableOpacity onPress={() => router.push('/profile')}>
+                        <GlassView style={styles.profileButton} intensity={20} tint={theme === 'dark' ? 'dark' : 'light'}>
+                            <Ionicons name="person" size={20} color={colors.text} />
+                        </GlassView>
+                    </TouchableOpacity>
+                </View>
+
+                <ScrollView
+                    contentContainerStyle={styles.scrollContent}
+                    showsVerticalScrollIndicator={false}
+                    refreshControl={
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FF5722" />
+                    }
+                >
+                    {/* Upcoming Drops */}
+                    <View style={styles.section}>
+                        <View style={styles.sectionHeader}>
+                            <Text style={[styles.sectionTitle, { color: colors.text }]}>Upcoming Drops</Text>
+                            <TouchableOpacity onPress={() => router.push('/explore')}>
+                                <Text style={[styles.seeAll, { color: colors.primary }]}>See All</Text>
+                            </TouchableOpacity>
+                        </View>
+                        {releases.length > 0 ? (
+                            <FlatList
+                                data={releases}
+                                renderItem={({ item }) => <ReleaseCard release={item} />}
+                                keyExtractor={(item) => item.id}
+                                horizontal
+                                showsHorizontalScrollIndicator={false}
+                                contentContainerStyle={styles.releasesList}
+                            />
+                        ) : (
+                            <Text style={[styles.emptyText, { color: colors.text }]}>No upcoming releases found.</Text>
+                        )}
+                    </View>
+
+                    {/* Latest News */}
+                    <View style={styles.section}>
+                        <Text style={[styles.sectionTitle, { color: colors.text }]}>Latest News</Text>
+                        <View style={styles.newsList}>
+                            {news.map((item) => (
+                                <NewsCard key={item.id} news={item} />
+                            ))}
+                        </View>
+                    </View>
+                </ScrollView>
+            </SafeAreaView>
         </View>
-        <TouchableOpacity onPress={toggleLayout} style={styles.layoutButton}>
-          {numColumns === 1 ? (
-            <LayoutGrid size={24} color="#FF5722" />
-          ) : (
-            <ListIcon size={24} color="#FF5722" />
-          )}
-        </TouchableOpacity>
-      </View>
-      {loading && !refreshing ? (
-        <ActivityIndicator size="large" color="#FF5722" style={styles.loader} />
-      ) : (
-        <FlatList
-          key={numColumns} // Force re-render when columns change
-          data={shoes}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.list}
-          numColumns={numColumns}
-          columnWrapperStyle={numColumns === 3 ? styles.columnWrapper : undefined}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FF5722" />
-          }
-        />
-      )}
-    </SafeAreaView>
-  );
+    );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#121212',
-  },
-  header: {
-    padding: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderBottomWidth: 1,
-    borderBottomColor: '#333',
-    backgroundColor: '#1E1E1E',
-    marginBottom: 10,
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'transparent',
-  },
-  headerLogo: {
-    width: 40,
-    height: 40,
-    resizeMode: 'contain',
-    marginRight: 10,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#FF5722',
-    letterSpacing: 1,
-  },
-  layoutButton: {
-    padding: 8,
-    backgroundColor: '#2C2C2C',
-    borderRadius: 8,
-  },
-  loader: {
-    marginTop: 50,
-  },
-  list: {
-    padding: 15,
-  },
-  columnWrapper: {
-    gap: 10, // Spacing between columns
-  },
-  // List View Styles
-  card: {
-    backgroundColor: '#1E1E1E',
-    borderRadius: 16,
-    marginBottom: 20,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#333',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 5,
-  },
-  image: {
-    width: '100%',
-    height: 220,
-    resizeMode: 'cover',
-  },
-  cardContent: {
-    padding: 15,
-  },
-  brand: {
-    fontSize: 12,
-    color: '#FF5722',
-    textTransform: 'uppercase',
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  name: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  // Grid View Styles
-  cardGrid: {
-    flex: 1,
-    backgroundColor: '#1E1E1E',
-    borderRadius: 12,
-    marginBottom: 10,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#333',
-    elevation: 3,
-  },
-  imageGrid: {
-    width: '100%',
-    height: 100,
-    resizeMode: 'cover',
-  },
-  cardContentGrid: {
-    padding: 8,
-  },
-  brandGrid: {
-    fontSize: 10,
-    color: '#FF5722',
-    textTransform: 'uppercase',
-    fontWeight: 'bold',
-    marginBottom: 2,
-  },
-  nameGrid: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
+    container: {
+        flex: 1,
+    },
+    center: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    orb1: {
+        position: 'absolute',
+        top: -100,
+        right: -100,
+        width: 400,
+        height: 400,
+        borderRadius: 200,
+        backgroundColor: 'rgba(255, 87, 34, 0.15)',
+        zIndex: 0,
+    },
+    orb2: {
+        position: 'absolute',
+        bottom: 0,
+        left: -100,
+        width: 300,
+        height: 300,
+        borderRadius: 150,
+        backgroundColor: 'rgba(33, 150, 243, 0.1)',
+        zIndex: 0,
+    },
+    header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+        zIndex: 10,
+    },
+    greeting: {
+        fontSize: 16,
+        opacity: 0.8,
+    },
+    title: {
+        fontSize: 28,
+        fontWeight: 'bold',
+    },
+    profileButton: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+        overflow: 'hidden',
+    },
+    scrollContent: {
+        paddingBottom: 100,
+    },
+    section: {
+        marginTop: 20,
+        paddingHorizontal: 20,
+    },
+    sectionHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 15,
+    },
+    sectionTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+    },
+    seeAll: {
+        fontSize: 14,
+        fontWeight: '600',
+    },
+    releasesList: {
+        paddingRight: 20,
+    },
+    newsList: {
+        gap: 15,
+    },
+    emptyText: {
+        fontStyle: 'italic',
+        opacity: 0.6,
+        marginTop: 10,
+    },
 });

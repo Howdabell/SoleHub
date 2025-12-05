@@ -1,13 +1,17 @@
+import GlassView from '@/components/GlassView';
 import { useAuth } from '@/context/AuthContext';
+import { useTheme } from '@/context/ThemeContext';
 import { supabase } from '@/lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Alert, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function TabTwoScreen() {
     const { user, session } = useAuth();
+    const { theme, colors } = useTheme();
     const router = useRouter();
     const [username, setUsername] = useState('');
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -56,104 +60,202 @@ export default function TabTwoScreen() {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>Profile</Text>
-            </View>
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
+            <LinearGradient
+                colors={theme === 'dark' ? ['#000000', '#121212', '#1E1E1E'] : ['#FFFFFF', '#F5F5F5', '#E0E0E0']}
+                style={StyleSheet.absoluteFill}
+            />
 
-            <View style={styles.profileInfo}>
-                <View style={styles.avatarContainer}>
-                    {avatarUrl ? (
-                        <Image source={{ uri: avatarUrl }} style={styles.avatar} />
-                    ) : (
-                        <Ionicons name="person-circle-outline" size={100} color="#FF5722" />
-                    )}
-                </View>
-                <Text style={styles.username}>{username || 'User'}</Text>
-                <Text style={styles.email}>{user?.email}</Text>
-            </View>
+            {/* Decorative Orbs */}
+            <View style={styles.orb1} />
+            <View style={styles.orb2} />
 
-            <View style={styles.menu}>
-                <TouchableOpacity
-                    style={styles.menuItem}
-                    onPress={() => router.push('/profile/edit')}
-                >
-                    <View style={styles.iconContainer}>
-                        <Ionicons name="person-outline" size={22} color="#fff" />
+            <SafeAreaView style={{ flex: 1 }}>
+                <ScrollView contentContainerStyle={styles.scrollContent}>
+                    <View style={styles.header}>
+                        <Text style={[styles.headerTitle, { color: colors.text }]}>Profile</Text>
                     </View>
-                    <Text style={styles.menuText}>Edit Profile</Text>
-                    <Ionicons name="chevron-forward" size={20} color="#666" />
-                </TouchableOpacity>
 
-                <TouchableOpacity style={styles.menuItem}>
-                    <View style={styles.iconContainer}>
-                        <Ionicons name="settings-outline" size={22} color="#fff" />
-                    </View>
-                    <Text style={styles.menuText}>Settings</Text>
-                    <Ionicons name="chevron-forward" size={20} color="#666" />
-                </TouchableOpacity>
+                    <GlassView
+                        style={styles.profileCard}
+                        contentContainerStyle={styles.profileCardContent}
+                        intensity={20}
+                        tint={theme === 'dark' ? 'dark' : 'light'}
+                    >
+                        <View style={styles.avatarContainer}>
+                            <GlassView
+                                style={styles.avatarFrame}
+                                contentContainerStyle={styles.avatarFrameContent}
+                                intensity={30}
+                                tint={theme === 'dark' ? 'light' : 'dark'}
+                            >
+                                {avatarUrl ? (
+                                    <Image source={{ uri: avatarUrl }} style={styles.avatar} />
+                                ) : (
+                                    <View style={styles.placeholderAvatar}>
+                                        <Ionicons name="person" size={40} color={theme === 'dark' ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.5)"} />
+                                    </View>
+                                )}
+                            </GlassView>
+                        </View>
+                        <Text style={[styles.username, { color: colors.text }]}>{username || 'User'}</Text>
+                        <Text style={[styles.email, { color: colors.text }]}>{user?.email}</Text>
+                    </GlassView>
 
-                <TouchableOpacity
-                    style={styles.menuItem}
-                    onPress={() => router.push('/favorites')}
-                >
-                    <View style={styles.iconContainer}>
-                        <Ionicons name="heart-outline" size={22} color="#fff" />
-                    </View>
-                    <Text style={styles.menuText}>Favorites</Text>
-                    <Ionicons name="chevron-forward" size={20} color="#666" />
-                </TouchableOpacity>
+                    <View style={styles.menu}>
+                        <TouchableOpacity
+                            onPress={() => router.push('/profile/edit')}
+                            activeOpacity={0.8}
+                        >
+                            <GlassView
+                                style={styles.menuItem}
+                                contentContainerStyle={styles.menuItemContent}
+                                intensity={15}
+                                tint={theme === 'dark' ? 'dark' : 'light'}
+                            >
+                                <View style={[styles.menuIconContainer, { backgroundColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)' }]}>
+                                    <Ionicons name="person-outline" size={22} color={colors.text} />
+                                </View>
+                                <Text style={[styles.menuText, { color: colors.text }]}>Edit Profile</Text>
+                                <Ionicons name="chevron-forward" size={20} color={theme === 'dark' ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)"} />
+                            </GlassView>
+                        </TouchableOpacity>
 
-                <TouchableOpacity style={styles.menuItem} onPress={handleSignOut}>
-                    <View style={[styles.iconContainer, styles.logoutIconContainer]}>
-                        <Ionicons name="log-out-outline" size={22} color="#FF5722" />
+                        <TouchableOpacity
+                            onPress={() => router.push('/settings')}
+                            activeOpacity={0.8}
+                        >
+                            <GlassView
+                                style={styles.menuItem}
+                                contentContainerStyle={styles.menuItemContent}
+                                intensity={15}
+                                tint={theme === 'dark' ? 'dark' : 'light'}
+                            >
+                                <View style={[styles.menuIconContainer, { backgroundColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)' }]}>
+                                    <Ionicons name="settings-outline" size={22} color={colors.text} />
+                                </View>
+                                <Text style={[styles.menuText, { color: colors.text }]}>Settings</Text>
+                                <Ionicons name="chevron-forward" size={20} color={theme === 'dark' ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)"} />
+                            </GlassView>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            onPress={() => router.push('/favorites')}
+                            activeOpacity={0.8}
+                        >
+                            <GlassView
+                                style={styles.menuItem}
+                                contentContainerStyle={styles.menuItemContent}
+                                intensity={15}
+                                tint={theme === 'dark' ? 'dark' : 'light'}
+                            >
+                                <View style={[styles.menuIconContainer, { backgroundColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)' }]}>
+                                    <Ionicons name="heart-outline" size={22} color={colors.text} />
+                                </View>
+                                <Text style={[styles.menuText, { color: colors.text }]}>Favorites</Text>
+                                <Ionicons name="chevron-forward" size={20} color={theme === 'dark' ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)"} />
+                            </GlassView>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity onPress={handleSignOut} activeOpacity={0.8}>
+                            <GlassView
+                                style={[styles.menuItem, styles.logoutItem]}
+                                contentContainerStyle={styles.menuItemContent}
+                                intensity={15}
+                                tint={theme === 'dark' ? 'dark' : 'light'}
+                            >
+                                <View style={[styles.menuIconContainer, styles.logoutIconContainer]}>
+                                    <Ionicons name="log-out-outline" size={22} color="#FF5722" />
+                                </View>
+                                <Text style={[styles.menuText, styles.logoutText]}>Sign Out</Text>
+                            </GlassView>
+                        </TouchableOpacity>
                     </View>
-                    <Text style={[styles.menuText, { color: '#FF5722' }]}>Sign Out</Text>
-                </TouchableOpacity>
-            </View>
-        </SafeAreaView>
+                </ScrollView>
+            </SafeAreaView>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#121212',
+    },
+    orb1: {
+        position: 'absolute',
+        top: -100,
+        right: -100,
+        width: 400,
+        height: 400,
+        borderRadius: 200,
+        backgroundColor: 'rgba(255, 87, 34, 0.15)',
+        zIndex: 0,
+    },
+    orb2: {
+        position: 'absolute',
+        bottom: 0,
+        left: -100,
+        width: 300,
+        height: 300,
+        borderRadius: 150,
+        backgroundColor: 'rgba(33, 150, 243, 0.1)',
+        zIndex: 0,
+    },
+    scrollContent: {
+        paddingBottom: 100,
     },
     header: {
-        padding: 20,
-        borderBottomWidth: 1,
-        borderBottomColor: '#333',
-        backgroundColor: '#1E1E1E',
+        paddingHorizontal: 20,
+        paddingVertical: 20,
         alignItems: 'center',
     },
     headerTitle: {
-        fontSize: 24,
+        fontSize: 28,
         fontWeight: 'bold',
         color: '#fff',
-        letterSpacing: 1,
+        letterSpacing: 0.5,
     },
-    profileInfo: {
+    profileCard: {
+        marginHorizontal: 20,
+        borderRadius: 24,
+        marginBottom: 30,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+        overflow: 'hidden',
+    },
+    profileCardContent: {
+        padding: 30,
         alignItems: 'center',
-        padding: 40,
-        backgroundColor: '#121212',
     },
     avatarContainer: {
         marginBottom: 20,
-        shadowColor: '#FF5722',
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.5,
-        shadowRadius: 20,
-        elevation: 10,
-        borderRadius: 50,
-        backgroundColor: '#121212', // Needed for shadow to be visible on some Android versions if radius is used
+    },
+    avatarFrame: {
+        width: 110,
+        height: 110,
+        borderRadius: 55,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.2)',
+        overflow: 'hidden',
+    },
+    avatarFrameContent: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 5,
     },
     avatar: {
-        width: 100,
-        height: 100,
+        width: '100%',
+        height: '100%',
         borderRadius: 50,
-        borderWidth: 2,
-        borderColor: '#FF5722',
+    },
+    placeholderAvatar: {
+        width: '100%',
+        height: '100%',
+        borderRadius: 50,
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     username: {
         fontSize: 24,
@@ -162,39 +264,47 @@ const styles = StyleSheet.create({
         marginBottom: 5,
     },
     email: {
-        fontSize: 16,
-        color: '#888',
+        fontSize: 14,
+        color: 'rgba(255, 255, 255, 0.6)',
     },
     menu: {
-        padding: 20,
+        paddingHorizontal: 20,
     },
     menuItem: {
+        borderRadius: 16,
+        marginBottom: 12,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.05)',
+        overflow: 'hidden',
+    },
+    menuItemContent: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 15,
-        paddingHorizontal: 20,
-        backgroundColor: '#1E1E1E',
-        marginBottom: 15,
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: '#333',
+        padding: 16,
     },
-    iconContainer: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        backgroundColor: '#333',
+    menuIconContainer: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
         justifyContent: 'center',
         alignItems: 'center',
-    },
-    logoutIconContainer: {
-        backgroundColor: 'rgba(255, 87, 34, 0.1)',
+        marginRight: 15,
     },
     menuText: {
         flex: 1,
-        marginLeft: 15,
         fontSize: 16,
         fontWeight: '600',
         color: '#fff',
+    },
+    logoutItem: {
+        marginTop: 20,
+        borderColor: 'rgba(255, 87, 34, 0.3)',
+    },
+    logoutIconContainer: {
+        backgroundColor: 'rgba(255, 87, 34, 0.15)',
+    },
+    logoutText: {
+        color: '#FF5722',
     },
 });
